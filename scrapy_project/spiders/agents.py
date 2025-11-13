@@ -6,6 +6,7 @@ class AgentSpider(scrapy.Spider):
     allowed_domains = ["compass.com"]
 
     start_urls = ["https://www.compass.com/agents/locations/district-of-columbia-dc/30522/"]
+    current_page = 1 # instance variable
 
     #function to crawl through the agent cards
 
@@ -14,20 +15,31 @@ class AgentSpider(scrapy.Spider):
         #in order to go throgh first card of the page 
         # need to get the follow links of each cards
         follow_links = cards.css("a.agentCard-imageWrapper::attr(href)").getall() 
+
+        if not cards:
+            self.logger.info(f"No cards found on page {self.current_page}. Stopping spider.")
+            return
         
         #for understanding iam going throgh the first agent
 
-        first_agent = follow_links[0]
+        for link in follow_links:
         
-        if first_agent:
-            print("following first card link",first_agent)
+            if link:
+                print("following first card link",link)
+                yield response.follow(link, callback=self.parse_details)
+        self.current_page += 1
+
+
+        # base_url = response.url.split('?')[0]  # Remove existing query parameters
+        # next_page = f"{base_url}?page={self.current_page}"
+        # yield response.follow(next_page,callback = self.parse)
+
+
 
             #here i called the details extraction function of the follow links
-
-            yield response.follow(first_agent, callback=self.parse_details)
     
 
-    #this function will parse the agent details
+    # #this function will parse the agent details
     def parse_details(self,response):
 
         #Getting full name
