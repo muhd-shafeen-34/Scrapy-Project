@@ -20,7 +20,7 @@ class AgentSpider(scrapy.Spider):
             self.logger.info(f"No cards found on page {self.current_page}. Stopping spider.")
             return
         
-        #for understanding iam going throgh the first agent
+        #iam going throgh the first page
 
         for link in follow_links:
         
@@ -58,19 +58,51 @@ class AgentSpider(scrapy.Spider):
 
         image = response.css("img.profile-image::attr(src)").get()
 
-        about = response.css("div.profile-body::text").getall()
+        #getting about
+        # about = response.css("div.profile-body::text").getall()
+
+        about = response.css("div.profile-about")
+        full_texts = about.css("::text").getall()
 
         #cleaning about
 
-        about_full = " ".join(about).replace("\n","")
+        cleaned_texts = []
+        for text in full_texts:
+            strip = text.strip()
+            if strip:
+                cleaned_texts.append(strip)
+        description = "".join(cleaned_texts).replace("\n","")
 
-        # Getting social links and its corresponding apps to make it as a dict
+
+        # Getting social links  to make it as a dict
 
         social_links = response.css("div.profile-experience a::attr(href)").getall()
-        social_text = response.css("div.profile-experience b::text").getall()
-        social = dict(zip(social_text,social_links))
+
+        #cleaning social links
+        cleaned_links = []
+        for i in social_links:
+            if i not in cleaned_links:
+                cleaned_links.append(i)
+
+
+            #excluded concierge social becuase the example in the task has excluded the concierge social
+        platforms = ['facebook', 'instagram', 'linkedin', 'twitter','youtube','tiktok','pintrest']
         
-        #getting email
+
+        # here store the link and its corresponding social media platforms
+        social_links = {}
+
+    #this section is used to find the platform from the link using nester for loops
+    
+        for link in cleaned_links:
+            lower_link = link.lower()
+            for platform in platforms:
+                if platform in lower_link:
+                    if platform not in social_links:
+                        social_links[platform] = link
+                    break
+
+        #getting emailc
 
         email = response.css("a.profileCard-email::text").get()
 
@@ -101,8 +133,8 @@ class AgentSpider(scrapy.Spider):
             "middle_name": middle,
             "last_name" : last,
             "image_url": image,
-            "desciption": about_full,
-            "social": social,
+            "desciption": description,
+            "social": social_links,
             "email": email,
             "title": title,
             "agent_phone_numbers": phonenumbers,
