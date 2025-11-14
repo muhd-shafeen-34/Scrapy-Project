@@ -7,14 +7,19 @@ class AgentSpider(scrapy.Spider):
 
     start_urls = ["https://www.compass.com/agents/locations/district-of-columbia-dc/30522/"]
 
+    #it will increment to get to the next page
+
     current_page = 1 # instance variable
 
     #function to crawl through the agent cards
 
     def parse(self, response):
         cards = response.css("div.agentCard") #storing the entire response 
+
         # need to get the follow links of each cards
         follow_links = cards.css("a.agentCard-imageWrapper::attr(href)").getall() 
+
+        #this condition checks the spider is in last page or not 
 
         if not cards:
             self.logger.info(f"No cards found on page {self.current_page}. Stopping spider.")
@@ -33,13 +38,13 @@ class AgentSpider(scrapy.Spider):
 
         base_url = response.url.split('?')[0]  # Remove existing query parameters
         next_page = f"{base_url}?page={self.current_page}"
+
+        #this code will pass the next page to the spider to crawl
+
         yield response.follow(next_page,callback = self.parse)
-        self.current_page += 1
 
 
-        # base_url = response.url.split('?')[0]  # Remove existing query parameters
-        # next_page = f"{base_url}?page={self.current_page}"
-        # yield response.follow(next_page,callback = self.parse)
+        self.current_page += 1 #incrementing to get next page number
 
 
 
@@ -146,7 +151,7 @@ class AgentSpider(scrapy.Spider):
                 number = i.split(": ")[1]
                 phonenumbers.append(number)
                 if i.startswith("O: "):
-                    number2= i.split(": ")[1]
+                    number2 = i.split(": ")[1]
                     officenumbers.append(number2)
 
 
@@ -163,15 +168,6 @@ class AgentSpider(scrapy.Spider):
             "agent_phone_numbers": phonenumbers,
             "office_phone_numbers": officenumbers,
         }
-
-
-
-
-
-
-
-        
-
 
 
 
