@@ -26,7 +26,9 @@ class AgentSpider(scrapy.Spider):
         for link in follow_links:
         
             if link:
-                print("following first card link",link)
+        
+                #passing the details 
+
                 yield response.follow(link, callback=self.parse_details)
 
 
