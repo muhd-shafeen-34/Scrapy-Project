@@ -13,7 +13,6 @@ class AgentSpider(scrapy.Spider):
 
     def parse(self, response):
         cards = response.css("div.agentCard") #storing the entire response 
-        #in order to go throgh first card of the page 
         # need to get the follow links of each cards
         follow_links = cards.css("a.agentCard-imageWrapper::attr(href)").getall() 
 
@@ -44,7 +43,7 @@ class AgentSpider(scrapy.Spider):
 
 
 
-            #here i called the details extraction function of the follow links
+            #here i defined the details extraction function of the follow links
     
 
     # #this function will parse the agent details
@@ -53,6 +52,7 @@ class AgentSpider(scrapy.Spider):
         #Getting full name
 
         names = response.css("h1.profileCard-name.textIntent-headline1::text").get().split()
+
         #cleaning the name to yield first name middle name last name
         first , middle , last = "","",""
         if len(names) == 1:
@@ -66,57 +66,72 @@ class AgentSpider(scrapy.Spider):
 
         image = response.css("img.profile-image::attr(src)").get()
 
-        #getting about
-        # about = response.css("div.profile-body::text").getall()
+        #extracting description
 
         about = response.css("div.profile-about")
         full_texts = about.css("::text").getall()
+        description = ""
 
-        #cleaning about
+        #this field only run when description return any paragraph
 
-        cleaned_texts = []
-        for text in full_texts:
-            strip = text.strip()
-            if strip:
-                cleaned_texts.append(strip)
-        description = "".join(cleaned_texts).replace("\n","")
+        if full_texts:
+
+            #cleaning about
+            cleaned_texts = []
+            for text in full_texts:
+                strip = text.strip()
+                if strip:
+                    cleaned_texts.append(strip)
+            description ="".join(cleaned_texts).replace("\n","")
+        else:
+            pass
 
 
         # Getting social links  to make it as a dict
 
-        social_links = response.css("div.profile-experience a::attr(href)").getall()
+        social_links_fetched = response.css("div.profile-experience a::attr(href)").getall()
+        social_links = {}
+
+        #this field only run when any link returns
+
+        if social_links_fetched:
 
         #cleaning social links
-        cleaned_links = []
-        for i in social_links:
-            if i not in cleaned_links:
-                cleaned_links.append(i)
+            cleaned_links = []
+            for i in social_links_fetched:
+                if i not in cleaned_links:
+                    cleaned_links.append(i)
 
 
             #excluded concierge social becuase the example in the task has excluded the concierge social
-        platforms = ['facebook', 'instagram', 'linkedin', 'twitter','youtube','tiktok','pintrest']
+            platforms = ['facebook', 'instagram', 'linkedin', 'twitter','youtube','tiktok','pintrest']
         
 
         # here store the link and its corresponding social media platforms
-        social_links = {}
 
     #this section is used to find the platform from the link using nester for loops
     
-        for link in cleaned_links:
-            lower_link = link.lower()
-            for platform in platforms:
-                if platform in lower_link:
-                    if platform not in social_links:
-                        social_links[platform] = link
-                    break
+            for link in cleaned_links:
+                lower_link = link.lower()
+                for platform in platforms:
+                    if platform in lower_link:
+                        if platform not in social_links:
+                            social_links[platform] = link
+                        break
+        else:
+            pass
 
-        #getting emailc
+        #getting email
 
         email = response.css("a.profileCard-email::text").get()
 
         #getting title
-
-        title = response.css("div.titleCard.textIntent-body::text").get()
+        title = ""
+        title_fetch = response.css("div.titleCard.textIntent-body::text").get()
+        if title_fetch:
+            title = title_fetch
+        else:
+            pass
 
         #getting numbers
 
@@ -147,9 +162,6 @@ class AgentSpider(scrapy.Spider):
             "title": title,
             "agent_phone_numbers": phonenumbers,
             "office_phone_numbers": officenumbers,
-
-
-
         }
 
 
