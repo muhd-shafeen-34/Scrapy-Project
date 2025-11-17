@@ -47,8 +47,6 @@ class AgentSpider(scrapy.Spider):
         self.current_page += 1 #incrementing to get next page number
 
 
-
-            #here i defined the details extraction function of the follow links
     
 
     # #this function will parse the agent details
@@ -56,7 +54,7 @@ class AgentSpider(scrapy.Spider):
 
         #Getting full name
 
-        names = response.css("h1.profileCard-name.textIntent-headline1::text").get().split()
+        names = response.xpath("//h1[@class='profileCard-name textIntent-headline1']/text()").get().split()
 
         #cleaning the name to yield first name middle name last name
         first , middle , last = "","",""
@@ -69,12 +67,13 @@ class AgentSpider(scrapy.Spider):
         
         profile = response.url
 
-        image = response.css("img.profile-image::attr(src)").get()
+        image = response.xpath("//img[contains(@class, 'profile-image')]/@src").get()
 
         #extracting description
 
-        about = response.css("div.profile-about")
-        full_texts = about.css("::text").getall()
+        about = response.xpath("//div[contains(@class, 'profile-about')]")
+        full_texts = about.xpath(".//text()").getall()
+
         description = ""
 
         #this field only run when description return any paragraph
@@ -94,7 +93,8 @@ class AgentSpider(scrapy.Spider):
 
         # Getting social links  to make it as a dict
 
-        social_links_fetched = response.css("div.profile-experience a::attr(href)").getall()
+        social_links_fetched = response.xpath("//div[contains(@class, 'profile-experience')]//a/@href").getall()
+
         social_links = {}
 
         #this field only run when any link returns
@@ -128,11 +128,13 @@ class AgentSpider(scrapy.Spider):
 
         #getting email
 
-        email = response.css("a.profileCard-email::text").get()
+        email = response.xpath("//a[contains(@class, 'profileCard-email')]/text()").get()
+
 
         #getting title
         title = ""
-        title_fetch = response.css("div.titleCard.textIntent-body::text").get()
+        title_fetch = response.xpath("//div[contains(@class, 'titleCard') and contains(@class, 'textIntent-body')]/text()").get()
+
         if title_fetch:
             title = title_fetch
         else:
@@ -140,7 +142,8 @@ class AgentSpider(scrapy.Spider):
 
         #getting numbers
 
-        numbers = response.css("div.phoneCard.textIntent-body a::text").getall()
+        numbers = response.xpath("//div[contains(@class, 'phoneCard') and contains(@class, 'textIntent-body')]//a/text()").getall()
+
 
         #cleaning numbers to yield
 
